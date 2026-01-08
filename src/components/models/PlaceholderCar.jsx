@@ -9,12 +9,14 @@ import { useGameStore } from '../../stores/gameStore'
  */
 export function PlaceholderCar(props) {
   const group = useRef()
-  const wheelRefs = useRef([])
+  const frontWheelRefs = useRef([]) // Front wheels (steerable)
+  const rearWheelRefs = useRef([])  // Rear wheels
   const glassRefs = useRef({})
 
   const carPosition = useGameStore((state) => state.carPosition)
   const carRotation = useGameStore((state) => state.carRotation)
   const carSpeed = useGameStore((state) => state.carSpeed)
+  const steeringAngle = useGameStore((state) => state.steeringAngle)
   const brokenGlassPanels = useGameStore((state) => state.brokenGlassPanels)
   const updateWheelRotation = useGameStore((state) => state.updateWheelRotation)
 
@@ -24,9 +26,19 @@ export function PlaceholderCar(props) {
       group.current.rotation.set(...carRotation)
     }
 
-    // Rotate wheels
+    // Rotate wheels based on speed
     const rotationSpeed = carSpeed * delta * 10
-    wheelRefs.current.forEach((wheel) => {
+
+    // Front wheels: rolling + steering
+    frontWheelRefs.current.forEach((wheel) => {
+      if (wheel) {
+        wheel.rotation.x += rotationSpeed
+        wheel.rotation.y = steeringAngle
+      }
+    })
+
+    // Rear wheels: rolling only
+    rearWheelRefs.current.forEach((wheel) => {
       if (wheel) {
         wheel.rotation.x += rotationSpeed
       }
@@ -36,13 +48,6 @@ export function PlaceholderCar(props) {
       updateWheelRotation(delta)
     }
   })
-
-  const wheelPositions = [
-    [-0.8, 0.3, 1.2],   // Front Left
-    [0.8, 0.3, 1.2],    // Front Right
-    [-0.8, 0.3, -1.2],  // Rear Left
-    [0.8, 0.3, -1.2],   // Rear Right
-  ]
 
   return (
     <group ref={group} {...props}>
@@ -116,19 +121,47 @@ export function PlaceholderCar(props) {
         </mesh>
       )}
 
-      {/* Wheels */}
-      {wheelPositions.map((pos, index) => (
+      {/* Front Wheels (steerable) */}
+      <group position={[-0.8, 0.3, 1.2]}>
         <mesh
-          key={index}
-          ref={(el) => (wheelRefs.current[index] = el)}
-          position={pos}
+          ref={(el) => (frontWheelRefs.current[0] = el)}
           rotation={[0, 0, Math.PI / 2]}
           castShadow
         >
           <cylinderGeometry args={[0.3, 0.3, 0.2, 16]} />
           <meshStandardMaterial color="#1f2937" roughness={0.8} />
         </mesh>
-      ))}
+      </group>
+      <group position={[0.8, 0.3, 1.2]}>
+        <mesh
+          ref={(el) => (frontWheelRefs.current[1] = el)}
+          rotation={[0, 0, Math.PI / 2]}
+          castShadow
+        >
+          <cylinderGeometry args={[0.3, 0.3, 0.2, 16]} />
+          <meshStandardMaterial color="#1f2937" roughness={0.8} />
+        </mesh>
+      </group>
+
+      {/* Rear Wheels */}
+      <mesh
+        ref={(el) => (rearWheelRefs.current[0] = el)}
+        position={[-0.8, 0.3, -1.2]}
+        rotation={[0, 0, Math.PI / 2]}
+        castShadow
+      >
+        <cylinderGeometry args={[0.3, 0.3, 0.2, 16]} />
+        <meshStandardMaterial color="#1f2937" roughness={0.8} />
+      </mesh>
+      <mesh
+        ref={(el) => (rearWheelRefs.current[1] = el)}
+        position={[0.8, 0.3, -1.2]}
+        rotation={[0, 0, Math.PI / 2]}
+        castShadow
+      >
+        <cylinderGeometry args={[0.3, 0.3, 0.2, 16]} />
+        <meshStandardMaterial color="#1f2937" roughness={0.8} />
+      </mesh>
 
       {/* Headlights */}
       <mesh position={[-0.6, 0.6, 2]}>

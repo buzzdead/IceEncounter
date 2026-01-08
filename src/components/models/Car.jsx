@@ -38,6 +38,7 @@ export function Car({ modelPath = '/models/car.glb', ...props }) {
   const carPosition = useGameStore((state) => state.carPosition)
   const carRotation = useGameStore((state) => state.carRotation)
   const carSpeed = useGameStore((state) => state.carSpeed)
+  const steeringAngle = useGameStore((state) => state.steeringAngle)
   const brokenGlassPanels = useGameStore((state) => state.brokenGlassPanels)
   const updateWheelRotation = useGameStore((state) => state.updateWheelRotation)
 
@@ -91,22 +92,36 @@ export function Car({ modelPath = '/models/car.glb', ...props }) {
     })
   }, [brokenGlassPanels])
 
-  // Rotate wheels based on car speed
+  // Rotate wheels based on car speed and steering
   useFrame((_, delta) => {
     if (group.current) {
       group.current.position.set(...carPosition)
       group.current.rotation.set(...carRotation)
     }
 
-    // Rotate all wheels based on speed
+    // Rotate all wheels based on speed (rolling)
     const wheelRotationSpeed = carSpeed * delta * 10
 
-    Object.values(wheelRefs.current).forEach((wheel) => {
-      if (wheel) {
-        // Rotate around the X axis (forward/backward motion)
-        wheel.rotation.x += wheelRotationSpeed
-      }
-    })
+    // Apply rolling rotation and steering to wheels
+    const { frontLeft, frontRight, rearLeft, rearRight } = wheelRefs.current
+
+    // Front wheels: rolling + steering
+    if (frontLeft) {
+      frontLeft.rotation.x += wheelRotationSpeed
+      frontLeft.rotation.y = steeringAngle
+    }
+    if (frontRight) {
+      frontRight.rotation.x += wheelRotationSpeed
+      frontRight.rotation.y = steeringAngle
+    }
+
+    // Rear wheels: rolling only
+    if (rearLeft) {
+      rearLeft.rotation.x += wheelRotationSpeed
+    }
+    if (rearRight) {
+      rearRight.rotation.x += wheelRotationSpeed
+    }
 
     // Update wheel rotation in store for reference
     if (carSpeed !== 0) {

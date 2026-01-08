@@ -1,7 +1,7 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { useGameStore } from '../stores/gameStore'
+import { useGameStore, GAME_PHASES, AGENT_IDS } from '../stores/gameStore'
 
 const MOVE_SPEED = 5
 const ROTATION_SPEED = 3
@@ -15,40 +15,49 @@ export function useAgentControls() {
   const drawGun = useGameStore((state) => state.drawGun)
   const holsterGun = useGameStore((state) => state.holsterGun)
   const shoot = useGameStore((state) => state.shoot)
-  const isGunDrawn = useGameStore((state) => state.isGunDrawn)
+  const checkDriverDoorTrigger = useGameStore((state) => state.checkDriverDoorTrigger)
+  const triggerCarReverse = useGameStore((state) => state.triggerCarReverse)
 
   // Handle key events
   useEffect(() => {
     const handleKeyDown = (e) => {
       keysPressed.current[e.code] = true
 
+      const { gamePhase, activeAgentId, agents } = useGameStore.getState()
+
+      // Only allow controls during playable phases
+      if (gamePhase === GAME_PHASES.CAR_REVERSING || gamePhase === GAME_PHASES.TRANSITION) {
+        return
+      }
+
+      const activeAgent = agents[activeAgentId]
+
       // Draw/holster gun with 'G'
       if (e.code === 'KeyG') {
-        if (isGunDrawn) {
-          holsterGun()
+        if (activeAgent.isGunDrawn) {
+          holsterGun(activeAgentId)
         } else {
-          drawGun()
+          drawGun(activeAgentId)
         }
       }
 
       // Shoot with Space (only if gun is drawn)
-      if (e.code === 'Space' && isGunDrawn) {
-        const agentPos = useGameStore.getState().agentPosition
-        const agentRot = useGameStore.getState().agentRotation
+      if (e.code === 'Space' && activeAgent.isGunDrawn) {
+        const agentPos = activeAgent.position
+        const agentRot = activeAgent.rotation
 
-        // Calculate shoot direction based on agent rotation
         const direction = new THREE.Vector3(0, 0, -1)
         const euler = new THREE.Euler(...agentRot)
         direction.applyEuler(euler)
 
-        // Shoot origin slightly in front of agent
         const origin = [
           agentPos[0] + direction.x * 0.5,
-          agentPos[1] + 1.5, // Approximately chest height
+          agentPos[1] + 1.5,
           agentPos[2] + direction.z * 0.5,
         ]
 
         shoot(origin, [direction.x, direction.y, direction.z])
+        setAgentAnimation(activeAgentId, 'shoot')
       }
     }
 
@@ -63,13 +72,21 @@ export function useAgentControls() {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [drawGun, holsterGun, isGunDrawn, shoot])
+  }, [drawGun, holsterGun, shoot, setAgentAnimation])
 
   // Update agent position/rotation each frame
   useFrame((_, delta) => {
-    const agentPos = useGameStore.getState().agentPosition
-    const agentRot = useGameStore.getState().agentRotation
-    const currentAnimation = useGameStore.getState().agentAnimation
+    const { gamePhase, activeAgentId, agents } = useGameStore.getState()
+
+    // Only allow movement during playable phases
+    if (gamePhase === GAME_PHASES.CAR_REVERSING || gamePhase === GAME_PHASES.TRANSITION) {
+      return
+    }
+
+    const activeAgent = agents[activeAgentId]
+    const agentPos = activeAgent.position
+    const agentRot = activeAgent.rotation
+    const currentAnimation = activeAgent.animation
 
     let isMoving = false
     const newPos = [...agentPos]
@@ -115,18 +132,25 @@ export function useAgentControls() {
 
     // Update position
     if (newPos[0] !== agentPos[0] || newPos[2] !== agentPos[2]) {
-      setAgentPosition(newPos)
+      setAgentPosition(activeAgentId, newPos)
     }
     if (newRot[1] !== agentRot[1]) {
-      setAgentRotation(newRot)
+      setAgentRotation(activeAgentId, newRot)
     }
 
-    // Update animation based on movement (only if not in special animation)
+    // Update animation based on movement
     if (currentAnimation !== 'drawGun' && currentAnimation !== 'shoot') {
       if (isMoving && currentAnimation !== 'walk') {
-        setAgentAnimation('walk')
+        setAgentAnimation(activeAgentId, 'walk')
       } else if (!isMoving && currentAnimation === 'walk') {
-        setAgentAnimation('idle')
+        setAgentAnimation(activeAgentId, 'idle')
+      }
+    }
+
+    // Check driver door trigger during approach phase
+    if (gamePhase === GAME_PHASES.APPROACH_CAR) {
+      if (checkDriverDoorTrigger()) {
+        triggerCarReverse()
       }
     }
   })
@@ -138,6 +162,7 @@ export function useCarControls() {
   const setCarPosition = useGameStore((state) => state.setCarPosition)
   const setCarRotation = useGameStore((state) => state.setCarRotation)
   const setCarSpeed = useGameStore((state) => state.setCarSpeed)
+  const setSteeringAngle = useGameStore((state) => state.setSteeringAngle)
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -161,6 +186,7 @@ export function useCarControls() {
     const carPos = useGameStore.getState().carPosition
     const carRot = useGameStore.getState().carRotation
     let speed = useGameStore.getState().carSpeed
+    let steering = useGameStore.getState().steeringAngle
 
     const newPos = [...carPos]
     const newRot = [...carRot]
@@ -176,7 +202,6 @@ export function useCarControls() {
     } else if (keysPressed.current['ArrowDown']) {
       speed = Math.max(speed - 10 * delta, -10)
     } else {
-      // Natural deceleration
       if (speed > 0) {
         speed = Math.max(speed - 3 * delta, 0)
       } else if (speed < 0) {
@@ -184,14 +209,23 @@ export function useCarControls() {
       }
     }
 
-    // Steering
+    // Steering angle for front wheels
+    if (keysPressed.current['ArrowLeft']) {
+      steering = Math.min(steering + 2 * delta, Math.PI / 6)
+    } else if (keysPressed.current['ArrowRight']) {
+      steering = Math.max(steering - 2 * delta, -Math.PI / 6)
+    } else {
+      // Return steering to center
+      if (steering > 0) {
+        steering = Math.max(steering - 3 * delta, 0)
+      } else if (steering < 0) {
+        steering = Math.min(steering + 3 * delta, 0)
+      }
+    }
+
+    // Apply steering to car rotation when moving
     if (Math.abs(speed) > 0.1) {
-      if (keysPressed.current['ArrowLeft']) {
-        newRot[1] += 2 * delta * Math.sign(speed)
-      }
-      if (keysPressed.current['ArrowRight']) {
-        newRot[1] -= 2 * delta * Math.sign(speed)
-      }
+      newRot[1] += steering * delta * Math.sign(speed) * 2
     }
 
     // Apply movement
@@ -201,5 +235,6 @@ export function useCarControls() {
     setCarPosition(newPos)
     setCarRotation(newRot)
     setCarSpeed(speed)
+    setSteeringAngle(steering)
   })
 }

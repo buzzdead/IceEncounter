@@ -1,20 +1,19 @@
 import { Suspense, useState, useEffect } from 'react'
 import { OrbitControls, Sky, Environment } from '@react-three/drei'
-import { useGLTF } from '@react-three/drei'
 import { Agent } from '../models/Agent'
 import { Car } from '../models/Car'
-import { Bullets } from '../models/Bullet'
 import { PlaceholderAgent } from '../models/PlaceholderAgent'
 import { PlaceholderCar } from '../models/PlaceholderCar'
 import { PlaceholderBullets } from '../models/PlaceholderBullet'
 import { Ground } from '../environment/Ground'
-import { useAgentControls, useCarControls } from '../../hooks/useControls'
+import { GameController } from './GameController'
+import { TransitionEffect } from './TransitionEffect'
+import { useAgentControls } from '../../hooks/useControls'
+import { useGameStore, GAME_PHASES, AGENT_IDS } from '../../stores/gameStore'
 
 // Controls component to use hooks inside Canvas
 function Controls() {
   useAgentControls()
-  // Uncomment to enable car controls with arrow keys
-  // useCarControls()
   return null
 }
 
@@ -48,30 +47,32 @@ function Loader() {
   )
 }
 
-// Conditional model loader
-function ModelLoader({ modelPath, ModelComponent, PlaceholderComponent, ...props }) {
-  const { exists, checked } = useModelExists(modelPath)
+// Driver door trigger zone visualization (debug)
+function DriverDoorTrigger({ visible = false }) {
+  const driverDoorPosition = useGameStore((state) => state.driverDoorPosition)
+  const driverDoorRadius = useGameStore((state) => state.driverDoorRadius)
 
-  if (!checked) {
-    return <Loader />
-  }
+  if (!visible) return null
 
-  if (exists) {
-    return (
-      <Suspense fallback={<Loader />}>
-        <ModelComponent modelPath={modelPath} {...props} />
-      </Suspense>
-    )
-  }
-
-  return <PlaceholderComponent {...props} />
+  return (
+    <mesh position={driverDoorPosition} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[driverDoorRadius - 0.1, driverDoorRadius, 32]} />
+      <meshBasicMaterial color="#22d3ee" transparent opacity={0.3} />
+    </mesh>
+  )
 }
 
 export function GameScene() {
+  const { exists: agentModelExists, checked: agentChecked } = useModelExists('/models/agent.glb')
+  const { exists: carModelExists, checked: carChecked } = useModelExists('/models/car.glb')
+
   return (
     <>
-      {/* Controls */}
+      {/* Game Systems */}
       <Controls />
+      <GameController />
+
+      {/* Camera controls */}
       <OrbitControls
         enablePan={true}
         enableZoom={true}
@@ -94,12 +95,7 @@ export function GameScene() {
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
       />
-
-      {/* Fill light */}
-      <directionalLight
-        position={[-10, 10, -10]}
-        intensity={0.3}
-      />
+      <directionalLight position={[-10, 10, -10]} intensity={0.3} />
 
       {/* Sky */}
       <Sky
@@ -115,22 +111,41 @@ export function GameScene() {
       {/* Ground */}
       <Ground size={100} roadWidth={12} />
 
-      {/* Agent - uses placeholder if model doesn't exist */}
-      <ModelLoader
-        modelPath="/models/agent.glb"
-        ModelComponent={Agent}
-        PlaceholderComponent={PlaceholderAgent}
-      />
+      {/* Driver door trigger zone (debug - set visible={true} to see it) */}
+      <DriverDoorTrigger visible={false} />
 
-      {/* Car - uses placeholder if model doesn't exist */}
-      <ModelLoader
-        modelPath="/models/car.glb"
-        ModelComponent={Car}
-        PlaceholderComponent={PlaceholderCar}
-      />
+      {/* All three agents */}
+      {agentChecked && !agentModelExists && (
+        <>
+          <PlaceholderAgent agentId={AGENT_IDS.NPC_STANDING} />
+          <PlaceholderAgent agentId={AGENT_IDS.PLAYER} />
+          <PlaceholderAgent agentId={AGENT_IDS.THIRD_AGENT} />
+        </>
+      )}
+      {agentChecked && agentModelExists && (
+        <Suspense fallback={<Loader />}>
+          {/* When you have the real agent model, replace these with Agent components */}
+          <PlaceholderAgent agentId={AGENT_IDS.NPC_STANDING} />
+          <PlaceholderAgent agentId={AGENT_IDS.PLAYER} />
+          <PlaceholderAgent agentId={AGENT_IDS.THIRD_AGENT} />
+        </Suspense>
+      )}
+      {!agentChecked && <Loader />}
 
-      {/* Bullets - uses placeholder bullets */}
+      {/* Car */}
+      {carChecked && !carModelExists && <PlaceholderCar />}
+      {carChecked && carModelExists && (
+        <Suspense fallback={<Loader />}>
+          <Car modelPath="/models/car.glb" />
+        </Suspense>
+      )}
+      {!carChecked && <Loader />}
+
+      {/* Bullets */}
       <PlaceholderBullets />
+
+      {/* Transition effects */}
+      <TransitionEffect />
     </>
   )
 }
