@@ -1,34 +1,38 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Canvas } from '@react-three/fiber'
+import { GameScene } from './components/scene/GameScene'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="game-container">
+      <Canvas
+        shadows
+        camera={{
+          position: [0, 10, 20],
+          fov: 60,
+          near: 0.1,
+          far: 1000,
+        }}
+        gl={{
+          antialias: true,
+          alpha: false,
+        }}
+      >
+        <GameScene />
+      </Canvas>
+
+      {/* UI Overlay */}
+      <div className="ui-overlay">
+        <div className="controls-info">
+          <h3>Controls</h3>
+          <p><strong>W/S</strong> - Move forward/backward</p>
+          <p><strong>A/D</strong> - Rotate left/right</p>
+          <p><strong>Q/E</strong> - Strafe left/right</p>
+          <p><strong>G</strong> - Draw/holster gun</p>
+          <p><strong>Space</strong> - Shoot (when gun drawn)</p>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 

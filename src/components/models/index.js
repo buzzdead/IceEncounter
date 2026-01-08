@@ -1,0 +1,6 @@
+export { Agent } from './Agent'
+export { Car } from './Car'
+export { Bullet, Bullets } from './Bullet'
+export { PlaceholderAgent } from './PlaceholderAgent'
+export { PlaceholderCar } from './PlaceholderCar'
+export { PlaceholderBullets } from './PlaceholderBullet'
