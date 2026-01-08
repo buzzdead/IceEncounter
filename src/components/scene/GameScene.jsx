@@ -103,6 +103,28 @@ function DriverDoorTrigger({ visible = false }) {
   )
 }
 
+// Front of car trigger zone visualization (debug)
+function FrontTrigger({ visible = false }) {
+  const carPosition = useGameStore((state) => state.carPosition)
+  const carRotation = useGameStore((state) => state.carRotation)
+  const frontTriggerOffset = useGameStore((state) => state.frontTriggerOffset)
+  const frontTriggerRadius = useGameStore((state) => state.frontTriggerRadius)
+
+  if (!visible) return null
+
+  // Calculate trigger position based on car position and rotation
+  const carRot = carRotation[1]
+  const frontX = carPosition[0] + Math.sin(carRot) * frontTriggerOffset
+  const frontZ = carPosition[2] - Math.cos(carRot) * frontTriggerOffset
+
+  return (
+    <mesh position={[frontX, 0.02, frontZ]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[frontTriggerRadius - 0.1, frontTriggerRadius, 32]} />
+      <meshBasicMaterial color="#f59e0b" transparent opacity={0.3} />
+    </mesh>
+  )
+}
+
 export function GameScene() {
   const { exists: agentModelExists, checked: agentChecked } = useModelExists('/models/agent.glb')
   const { exists: carModelExists, checked: carChecked } = useModelExists('/models/car.glb')
@@ -145,8 +167,9 @@ export function GameScene() {
       {/* Ground */}
       <Ground size={100} roadWidth={12} />
 
-      {/* Driver door trigger zone (debug - set visible={true} to see it) */}
+      {/* Trigger zones (debug - set visible={true} to see them) */}
       <DriverDoorTrigger visible={true} />
+      <FrontTrigger visible={true} />
 
       {/* All three agents */}
       {agentChecked && !agentModelExists && (

@@ -12,7 +12,8 @@ function GameUI() {
     [GAME_PHASES.APPROACH_CAR]: 'Walk to the driver door (blue agent)',
     [GAME_PHASES.CAR_REVERSING]: 'Car is reversing...',
     [GAME_PHASES.TRANSITION]: 'Switching perspective...',
-    [GAME_PHASES.THIRD_AGENT]: 'You now control the green agent',
+    [GAME_PHASES.THIRD_AGENT]: 'Walk to the front of the car',
+    [GAME_PHASES.CAR_CHARGE]: 'Watch out!',
   }
 
   return (
