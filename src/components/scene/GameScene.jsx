@@ -1,5 +1,6 @@
-import { Suspense, useState, useEffect } from 'react'
-import { OrbitControls, Sky, Environment } from '@react-three/drei'
+import { Suspense, useState, useEffect, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import { Sky, Environment } from '@react-three/drei'
 import { Agent } from '../models/Agent'
 import { Car } from '../models/Car'
 import { PlaceholderAgent } from '../models/PlaceholderAgent'
@@ -15,6 +16,44 @@ import * as THREE from 'three'
 // Controls component to use hooks inside Canvas
 function Controls() {
   useAgentControls()
+  return null
+}
+
+// Camera that follows the active agent
+function FollowCamera() {
+  const { camera } = useThree()
+  const activeAgentId = useGameStore((state) => state.activeAgentId)
+  const agents = useGameStore((state) => state.agents)
+
+  // Camera offset from agent (behind and above)
+  const offset = useRef(new THREE.Vector3(-8, 6, 12))
+  const smoothedPosition = useRef(new THREE.Vector3())
+  const smoothedLookAt = useRef(new THREE.Vector3())
+
+  useFrame((_, delta) => {
+    const agent = agents[activeAgentId]
+    if (!agent) return
+
+    const agentPos = new THREE.Vector3(...agent.position)
+    const agentRot = agent.rotation[1] // Y rotation
+
+    // Calculate camera position based on agent's rotation
+    // Rotate the offset around the agent
+    const rotatedOffset = offset.current.clone()
+    rotatedOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), agentRot)
+
+    const targetPosition = agentPos.clone().add(rotatedOffset)
+    const targetLookAt = agentPos.clone().add(new THREE.Vector3(0, 1.5, 0)) // Look at agent's head height
+
+    // Smooth camera movement
+    const smoothFactor = 1 - Math.pow(0.001, delta)
+    smoothedPosition.current.lerp(targetPosition, smoothFactor)
+    smoothedLookAt.current.lerp(targetLookAt, smoothFactor)
+
+    camera.position.copy(smoothedPosition.current)
+    camera.lookAt(smoothedLookAt.current)
+  })
+
   return null
 }
 
@@ -73,21 +112,8 @@ export function GameScene() {
       <Controls />
       <GameController />
 
-      {/* Camera controls */}
-     <OrbitControls
-  enablePan={true} 
-  // We keep enablePan true, but re-map the buttons:
-  mouseButtons={{
-    LEFT: THREE.MOUSE.ROTATE,
-    MIDDLE: THREE.MOUSE.DOLLY,
-    RIGHT: null // This deactivates the right-click action for the camera
-  }}
-  enableZoom={true}
-  enableRotate={true}
-  maxPolarAngle={Math.PI / 2.1}
-  minDistance={5}
-  maxDistance={50}
-/>
+      {/* Follow camera */}
+      <FollowCamera />
 
       {/* Lighting */}
       <ambientLight intensity={0.4} />
