@@ -54,9 +54,9 @@ export const useGameStore = create((set, get) => ({
   steeringAngle: 0,  // Front wheel steering angle
   brokenGlassPanels: [],
 
-  // Driver door trigger position (left side of car)
-  driverDoorPosition: [-2, 0, 0.5],
-  driverDoorRadius: 1.5,
+  // Driver door trigger position (near front left wheel)
+  driverDoorPosition: [-1.5, 0, 1.5],
+  driverDoorRadius: 1.2,
 
   // Transition state
   transitionProgress: 0,

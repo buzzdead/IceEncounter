@@ -100,15 +100,15 @@ export function useAgentControls() {
     const right = new THREE.Vector3(1, 0, 0)
     right.applyEuler(euler)
 
-    // Movement
+    // Movement (inverted because model faces opposite direction)
     if (keysPressed.current['KeyW']) {
-      newPos[0] += forward.x * MOVE_SPEED * delta
-      newPos[2] += forward.z * MOVE_SPEED * delta
+      newPos[0] -= forward.x * MOVE_SPEED * delta
+      newPos[2] -= forward.z * MOVE_SPEED * delta
       isMoving = true
     }
     if (keysPressed.current['KeyS']) {
-      newPos[0] -= forward.x * MOVE_SPEED * delta
-      newPos[2] -= forward.z * MOVE_SPEED * delta
+      newPos[0] += forward.x * MOVE_SPEED * delta
+      newPos[2] += forward.z * MOVE_SPEED * delta
       isMoving = true
     }
     if (keysPressed.current['KeyA']) {

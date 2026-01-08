@@ -117,8 +117,8 @@ export function GameController() {
           thirdAgent.position[2] + dirZ * THIRD_AGENT_WALK.walkSpeed * delta,
         ]
 
-        // Calculate rotation to face movement direction
-        const targetRotY = Math.atan2(-dirX, -dirZ)
+        // Calculate rotation to face movement direction (add PI to face forward)
+        const targetRotY = Math.atan2(dirX, dirZ)
 
         setAgentPosition(AGENT_IDS.THIRD_AGENT, newPos)
         setAgentRotation(AGENT_IDS.THIRD_AGENT, [0, targetRotY, 0])
