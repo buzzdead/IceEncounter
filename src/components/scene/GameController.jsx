@@ -27,6 +27,7 @@ const THIRD_AGENT_WALK = {
 
 export function GameController() {
   const sequenceTimeRef = useRef(0)
+  const activeAgentId = useGameStore((state) => state.activeAgentId)
   const carStartPositionRef = useRef(null)
   const carStartRotationRef = useRef(null)
 
@@ -106,7 +107,7 @@ export function GameController() {
       const distance = Math.sqrt(dx * dx + dz * dz)
 
       // Only move if not at target yet
-      if (distance > 0.5) {
+      if (distance > 0.5 && activeAgentId !== AGENT_IDS.THIRD_AGENT) {
         // Calculate movement
         const dirX = dx / distance
         const dirZ = dz / distance
