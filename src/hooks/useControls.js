@@ -105,7 +105,8 @@ export function useAgentControls() {
         const agentRot = activeAgent.rotation
 
         // Calculate forward direction based on agent rotation
-        const direction = new THREE.Vector3(0, 0, -1)
+        // Use +Z because model faces opposite direction (same as movement)
+        const direction = new THREE.Vector3(0, 0, 1)
         const euler = new THREE.Euler(...agentRot)
         direction.applyEuler(euler)
 
