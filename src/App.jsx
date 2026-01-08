@@ -1,34 +1,81 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Canvas } from '@react-three/fiber'
+import { GameScene } from './components/scene/GameScene'
+import { useGameStore, GAME_PHASES } from './stores/gameStore'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+// Game UI Component
+function GameUI() {
+  const gamePhase = useGameStore((state) => state.gamePhase)
+  const resetGame = useGameStore((state) => state.resetGame)
+
+  const phaseMessages = {
+    [GAME_PHASES.APPROACH_CAR]: 'Walk to the driver door (blue agent)',
+    [GAME_PHASES.CAR_REVERSING]: 'Car is reversing...',
+    [GAME_PHASES.TRANSITION]: 'Switching perspective...',
+    [GAME_PHASES.THIRD_AGENT]: 'You now control the green agent',
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="ui-overlay">
+      {/* Objective display */}
+      <div className="objective-info">
+        <div className="objective-label">Objective</div>
+        <div className="objective-text">{phaseMessages[gamePhase]}</div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+
+      {/* Controls info */}
+      <div className="controls-info">
+        <h3>Controls</h3>
+        <p><strong>W/S</strong> - Move forward/backward</p>
+        <p><strong>A/D</strong> - Rotate left/right</p>
+        <p><strong>Q/E</strong> - Strafe left/right</p>
+        <p><strong>G</strong> - Draw/holster gun</p>
+        <p><strong>Space</strong> - Shoot (when gun drawn)</p>
+        <button className="reset-button" onClick={resetGame}>
+          Reset Game
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+
+      {/* Agent colors legend */}
+      <div className="legend-info">
+        <div className="legend-item">
+          <span className="legend-color" style={{ backgroundColor: '#6b7280' }}></span>
+          <span>NPC (gray)</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-color" style={{ backgroundColor: '#3b82f6' }}></span>
+          <span>You (blue)</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-color" style={{ backgroundColor: '#10b981' }}></span>
+          <span>Third Agent (green)</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <div className="game-container">
+      <Canvas
+        shadows
+        camera={{
+          position: [-10, 8, 15],
+          fov: 60,
+          near: 0.1,
+          far: 1000,
+        }}
+        gl={{
+          antialias: true,
+          alpha: false,
+        }}
+      >
+        <GameScene />
+      </Canvas>
+
+      <GameUI />
+    </div>
   )
 }
 
