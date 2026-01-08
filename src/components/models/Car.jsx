@@ -47,16 +47,18 @@ export function Car({ modelPath = '/models/car.glb', ...props }) {
     const clone = scene.clone()
 
     // Traverse and find wheels and glass
+    // Wheels might be Groups or Objects, not just Meshes
     clone.traverse((child) => {
-      if (child.isMesh) {
-        // Find wheels
-        Object.entries(WHEEL_NAMES).forEach(([key, name]) => {
-          if (child.name === name || child.name.includes(name)) {
-            wheelRefs.current[key] = child
-          }
-        })
+      // Find wheels by name (can be Group, Object3D, or Mesh)
+      Object.entries(WHEEL_NAMES).forEach(([key, name]) => {
+        if (child.name === name || child.name.includes(name)) {
+          wheelRefs.current[key] = child
+          console.log(`Found wheel ${key}:`, child.name, child.type)
+        }
+      })
 
-        // Find glass panels
+      // Find glass panels (usually meshes)
+      if (child.isMesh) {
         Object.entries(GLASS_PANELS).forEach(([key, name]) => {
           if (child.name === name || child.name.includes(name)) {
             glassRefs.current[key] = child
