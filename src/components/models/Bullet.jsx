@@ -7,7 +7,7 @@ import { useGameStore } from '../../stores/gameStore'
 const BULLET_MAX_DISTANCE = 100
 const BULLET_LIFETIME = 5000 // ms
 
-export function Bullet({ bullet, modelPath = '/models/bullet.glb' }) {
+export function Bullet({ bullet, modelPath = '/models/Bullet.glb' }) {
   const ref = useRef()
   const { scene } = useGLTF(modelPath)
   const removeBullet = useGameStore((state) => state.removeBullet)
@@ -27,6 +27,17 @@ export function Bullet({ bullet, modelPath = '/models/bullet.glb' }) {
     () => new THREE.Vector3(...bullet.position),
     [bullet.position]
   )
+
+  // Calculate rotation to face the direction of travel
+  const bulletRotation = useMemo(() => {
+    const quaternion = new THREE.Quaternion()
+    const up = new THREE.Vector3(0, 1, 0)
+    const matrix = new THREE.Matrix4()
+    matrix.lookAt(new THREE.Vector3(0, 0, 0), direction, up)
+    quaternion.setFromRotationMatrix(matrix)
+    const euler = new THREE.Euler().setFromQuaternion(quaternion)
+    return [euler.x, euler.y, euler.z]
+  }, [direction])
 
   useFrame((state, delta) => {
     if (!ref.current) return
@@ -87,6 +98,7 @@ export function Bullet({ bullet, modelPath = '/models/bullet.glb' }) {
     <group
       ref={ref}
       position={bullet.position}
+      rotation={bulletRotation}
       userData={{ isBullet: true }}
     >
       <primitive object={clonedScene} scale={0.1} />
@@ -108,4 +120,4 @@ export function Bullets({ modelPath }) {
 }
 
 // Preload the model
-useGLTF.preload('/models/bullet.glb')
+useGLTF.preload('/models/Bullet.glb')

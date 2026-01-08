@@ -24,6 +24,19 @@ function PlaceholderBullet({ bullet }) {
     [bullet.position]
   )
 
+  // Calculate rotation to face the direction of travel
+  const bulletRotation = useMemo(() => {
+    const euler = new THREE.Euler()
+    // Look at direction (bullet points along -Z by default, we rotate to match direction)
+    const quaternion = new THREE.Quaternion()
+    const up = new THREE.Vector3(0, 1, 0)
+    const matrix = new THREE.Matrix4()
+    matrix.lookAt(new THREE.Vector3(0, 0, 0), direction, up)
+    quaternion.setFromRotationMatrix(matrix)
+    euler.setFromQuaternion(quaternion)
+    return [euler.x, euler.y, euler.z]
+  }, [direction])
+
   useFrame((state, delta) => {
     if (!ref.current) return
 
@@ -68,8 +81,8 @@ function PlaceholderBullet({ bullet }) {
   })
 
   return (
-    <group ref={ref} position={bullet.position} userData={{ isBullet: true }}>
-      {/* Bullet body */}
+    <group ref={ref} position={bullet.position} rotation={bulletRotation} userData={{ isBullet: true }}>
+      {/* Bullet body - oriented along Z axis (forward) */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <capsuleGeometry args={[0.02, 0.08, 4, 8]} />
         <meshStandardMaterial
@@ -79,7 +92,7 @@ function PlaceholderBullet({ bullet }) {
           metalness={0.8}
         />
       </mesh>
-      {/* Tracer effect */}
+      {/* Tracer effect - behind the bullet */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.1]}>
         <cylinderGeometry args={[0.01, 0.02, 0.3, 8]} />
         <meshBasicMaterial color="#fef3c7" transparent opacity={0.6} />

@@ -29,8 +29,8 @@ function GameUI() {
         <p><strong>W/S</strong> - Move forward/backward</p>
         <p><strong>A/D</strong> - Rotate left/right</p>
         <p><strong>Q/E</strong> - Strafe left/right</p>
-        <p><strong>G</strong> - Draw/holster gun</p>
-        <p><strong>Space</strong> - Shoot (when gun drawn)</p>
+        <p><strong>Right-click (hold)</strong> - Aim</p>
+        <p><strong>Left-click</strong> - Shoot (when aiming)</p>
         <button className="reset-button" onClick={resetGame}>
           Reset Game
         </button>

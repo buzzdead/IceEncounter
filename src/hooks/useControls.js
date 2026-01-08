@@ -85,14 +85,55 @@ export function useAgentControls() {
     }
   };
 
+  const handleClick = (e) => {
+    // Left click (button 0) - fire when aiming
+    if (e.button === 0) {
+      const { gamePhase, activeAgentId, agents } = useGameStore.getState()
+
+      // Only allow shooting during playable phases
+      if (gamePhase === GAME_PHASES.CAR_REVERSING || gamePhase === GAME_PHASES.TRANSITION) {
+        return
+      }
+
+      const activeAgent = agents[activeAgentId]
+
+      // Only fire if gun is drawn (aiming)
+      if (activeAgent.isGunDrawn) {
+        e.preventDefault()
+
+        const agentPos = activeAgent.position
+        const agentRot = activeAgent.rotation
+
+        // Calculate forward direction based on agent rotation
+        const direction = new THREE.Vector3(0, 0, -1)
+        const euler = new THREE.Euler(...agentRot)
+        direction.applyEuler(euler)
+
+        // Origin: slightly in front of agent at gun height
+        const origin = [
+          agentPos[0] + direction.x * 0.5,
+          agentPos[1] + 1.5,
+          agentPos[2] + direction.z * 0.5,
+        ]
+
+        shoot(origin, [direction.x, direction.y, direction.z])
+        setAgentAnimation(activeAgentId, 'shoot')
+      }
+    }
+  }
+
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
     window.addEventListener('mousedown', handleMouseDown)
     window.addEventListener('mouseup', handleMouseUp)
+    window.addEventListener('mousedown', handleClick)
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
+      window.removeEventListener('mousedown', handleMouseDown)
+      window.removeEventListener('mouseup', handleMouseUp)
+      window.removeEventListener('mousedown', handleClick)
     }
   }, [drawGun, holsterGun, shoot, setAgentAnimation])
 
