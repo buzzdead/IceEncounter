@@ -124,10 +124,9 @@ export function GameScene() {
       )}
       {agentChecked && agentModelExists && (
         <Suspense fallback={<Loader />}>
-          {/* When you have the real agent model, replace these with Agent components */}
-          <PlaceholderAgent agentId={AGENT_IDS.NPC_STANDING} />
-          <PlaceholderAgent agentId={AGENT_IDS.PLAYER} />
-          <PlaceholderAgent agentId={AGENT_IDS.THIRD_AGENT} />
+          <Agent agentId={AGENT_IDS.NPC_STANDING} />
+          <Agent agentId={AGENT_IDS.PLAYER} />
+          <Agent agentId={AGENT_IDS.THIRD_AGENT} />
         </Suspense>
       )}
       {!agentChecked && <Loader />}
