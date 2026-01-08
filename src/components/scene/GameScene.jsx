@@ -26,8 +26,8 @@ function FollowCamera() {
   const agents = useGameStore((state) => state.agents)
 
   // Camera offset from agent (behind and above)
-  // Model faces +Z, so camera should be at +Z to be behind
-  const offset = useRef(new THREE.Vector3(0, 5, 10))
+  // Model faces +Z, so camera should be at -Z to be behind them
+  const offset = useRef(new THREE.Vector3(0, 5, -10))
   const smoothedPosition = useRef(new THREE.Vector3())
   const smoothedLookAt = useRef(new THREE.Vector3())
 
