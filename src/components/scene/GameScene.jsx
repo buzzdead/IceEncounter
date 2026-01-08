@@ -10,6 +10,7 @@ import { GameController } from './GameController'
 import { TransitionEffect } from './TransitionEffect'
 import { useAgentControls } from '../../hooks/useControls'
 import { useGameStore, GAME_PHASES, AGENT_IDS } from '../../stores/gameStore'
+import * as THREE from 'three'
 
 // Controls component to use hooks inside Canvas
 function Controls() {
@@ -73,14 +74,20 @@ export function GameScene() {
       <GameController />
 
       {/* Camera controls */}
-      <OrbitControls
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        maxPolarAngle={Math.PI / 2.1}
-        minDistance={5}
-        maxDistance={50}
-      />
+     <OrbitControls
+  enablePan={true} 
+  // We keep enablePan true, but re-map the buttons:
+  mouseButtons={{
+    LEFT: THREE.MOUSE.ROTATE,
+    MIDDLE: THREE.MOUSE.DOLLY,
+    RIGHT: null // This deactivates the right-click action for the camera
+  }}
+  enableZoom={true}
+  enableRotate={true}
+  maxPolarAngle={Math.PI / 2.1}
+  minDistance={5}
+  maxDistance={50}
+/>
 
       {/* Lighting */}
       <ambientLight intensity={0.4} />

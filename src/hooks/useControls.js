@@ -21,6 +21,7 @@ export function useAgentControls() {
   // Handle key events
   useEffect(() => {
     const handleKeyDown = (e) => {
+      console.log(e.code)
       keysPressed.current[e.code] = true
 
       const { gamePhase, activeAgentId, agents } = useGameStore.getState()
@@ -33,13 +34,17 @@ export function useAgentControls() {
       const activeAgent = agents[activeAgentId]
 
       // Draw/holster gun with 'G'
-      if (e.code === 'KeyG') {
-        if (activeAgent.isGunDrawn) {
-          holsterGun(activeAgentId)
-        } else {
-          drawGun(activeAgentId)
-        }
-      }
+      if (e.button === 2) {
+  // Prevent the default browser context menu from firing
+  e.preventDefault();
+
+  if (activeAgent.isGunDrawn) {
+    holsterGun(activeAgentId)
+  } else {
+    console.log("drawing")
+    drawGun(activeAgentId)
+  }
+}
 
       // Shoot with Space (only if gun is drawn)
       if (e.code === 'Space' && activeAgent.isGunDrawn) {
@@ -65,8 +70,25 @@ export function useAgentControls() {
       keysPressed.current[e.code] = false
     }
 
+   const handleMouseDown = (e) => {
+    if (e.button === 2) {
+      e.preventDefault();
+      const { activeAgentId } = useGameStore.getState();
+      drawGun(activeAgentId); // Sets animation to 'drawGun'
+    }
+  };
+
+  const handleMouseUp = (e) => {
+    if (e.button === 2) {
+      const { activeAgentId } = useGameStore.getState();
+      holsterGun(activeAgentId); // Should set animation back to 'idle'
+    }
+  };
+
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
+    window.addEventListener('mousedown', handleMouseDown)
+    window.addEventListener('mouseup', handleMouseUp)
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)

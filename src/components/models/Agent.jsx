@@ -1,15 +1,16 @@
 import { useRef, useEffect, useMemo } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useGraph, createPortal } from '@react-three/fiber'
 import { useGLTF, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
 import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js'
 import { useGameStore } from '../../stores/gameStore'
+import { Gun } from './Gun'
 
 // Animation name mappings - update these to match your actual animation names in Blender
 const ANIMATION_MAP = {
   idle: 'Idle',       // Replace with your actual idle animation name
   walk: 'Walk',       // Replace with your actual walk animation name
-  drawGun: 'DrawGun', // Replace with your actual draw gun animation name
+  drawGun: 'Draw', // Replace with your actual draw gun animation name
   shoot: 'Shoot',     // Replace with your actual shoot animation name
 }
 
@@ -34,59 +35,59 @@ export function Agent({ agentId, modelPath = '/models/agent.glb', ...props }) {
         child.material = child.material.clone()
       }
     })
+    console.log(clone)
     return clone
   }, [scene, agentId])
 
   // Get animations for this specific clone
   const { actions, mixer } = useAnimations(animations, group)
+  const { nodes } = useGraph(clonedScene)
 
   // Handle animation changes
   useEffect(() => {
-    if (!agent || !actions) return
+  if (!agent || !actions) return
 
-    const animationName = ANIMATION_MAP[agent.animation]
-    const action = actions[animationName]
+  const animationName = ANIMATION_MAP[agent.animation]
+  const currentAction = actions[animationName]
 
-    if (!action) {
-      console.warn(`Animation "${animationName}" not found for agent ${agentId}. Available:`, Object.keys(actions))
-      return
+  if (!currentAction) return
+
+  // 1. SPECIFIC LOGIC FOR DRAWING (MOUSE DOWN)
+  if (agent.animation === 'drawGun') {
+    currentAction
+      .reset()
+      .setLoop(THREE.LoopOnce, 1)
+      .play()
+    
+    currentAction.clampWhenFinished = true
+    currentAction.paused = false
+    currentAction.timeScale = 1
+  } 
+  
+  // 2. SPECIFIC LOGIC FOR RELEASING (MOUSE UP)
+  else {
+    const drawAction = actions[ANIMATION_MAP.drawGun]
+    
+    // If we were holding the gun, reverse it BEFORE going to the next animation
+    if (drawAction && drawAction.time > 0) {
+      drawAction.paused = false
+      drawAction.timeScale = -1
+      drawAction.setLoop(THREE.LoopOnce, 1)
+      drawAction.play()
     }
 
-    // Fade out all current animations
-    Object.values(actions).forEach((a) => {
-      if (a && a.isRunning()) {
-        a.fadeOut(0.2)
-      }
-    })
+    // Now play the target animation (Idle or Walk)
+    currentAction.reset().fadeIn(0.2).play()
+  }
 
-    // Play new animation
-    action.reset()
-    action.fadeIn(0.2)
-    action.play()
-
-    // For shoot animation, play once then return to idle
-    if (agent.animation === 'shoot') {
-      action.setLoop(THREE.LoopOnce, 1)
-      action.clampWhenFinished = true
-
-      const onFinished = () => {
-        setAgentAnimation(agentId, 'idle')
-        mixer.removeEventListener('finished', onFinished)
-      }
-      mixer.addEventListener('finished', onFinished)
-    } else if (agent.animation === 'drawGun') {
-      action.setLoop(THREE.LoopOnce, 1)
-      action.clampWhenFinished = true
-
-      const onFinished = () => {
-        setAgentAnimation(agentId, 'idle')
-        mixer.removeEventListener('finished', onFinished)
-      }
-      mixer.addEventListener('finished', onFinished)
-    } else {
-      action.setLoop(THREE.LoopRepeat)
+  // 3. CLEANUP: Only fade out animations that aren't the current one OR the Draw animation
+  Object.keys(actions).forEach((key) => {
+    if (key !== animationName && key !== ANIMATION_MAP.drawGun) {
+      actions[key]?.fadeOut(0.2)
     }
-  }, [agent?.animation, actions, mixer, agentId, setAgentAnimation])
+  })
+
+}, [agent?.animation, actions])
 
   // Update position and rotation
   useFrame(() => {
@@ -108,6 +109,10 @@ export function Agent({ agentId, modelPath = '/models/agent.glb', ...props }) {
         </mesh>
       )}
       <primitive object={clonedScene} />
+    {nodes.mixamorigRightHand && createPortal(
+      <Gun />, 
+      nodes.mixamorigRightHand
+    )}
     </group>
   )
 }
