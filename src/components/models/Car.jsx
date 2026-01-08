@@ -53,7 +53,8 @@ export function Car({ modelPath = '/models/car.glb', ...props }) {
       Object.entries(WHEEL_NAMES).forEach(([key, name]) => {
         if (child.name === name || child.name.includes(name)) {
           wheelRefs.current[key] = child
-          console.log(`Found wheel ${key}:`, child.name, child.type)
+         console.log(`Found wheel ${key}:`, child.name, child.type, 'Children Count:', child.children.length, child);
+        
         }
       })
 
@@ -73,7 +74,9 @@ export function Car({ modelPath = '/models/car.glb', ...props }) {
         })
       }
     })
-
+  clone.rotation.set(0, -Math.PI / 2, 0)
+    clone.scale.set(3,3,3)
+    clone.position.set(0, 1.15, 0)
     return clone
   }, [scene])
 
@@ -96,6 +99,7 @@ export function Car({ modelPath = '/models/car.glb', ...props }) {
 
   // Rotate wheels based on car speed and steering
   useFrame((_, delta) => {
+ 
     if (group.current) {
       group.current.position.set(...carPosition)
       group.current.rotation.set(...carRotation)
@@ -103,33 +107,34 @@ export function Car({ modelPath = '/models/car.glb', ...props }) {
 
     // Rotate all wheels based on speed (rolling)
     // Using Y axis for rolling (common in Blender exports)
-    const wheelRotationSpeed = carSpeed * delta * 5
+   const wheelRotationSpeed = carSpeed * delta * 5
 
     // Apply rolling rotation and steering to wheels
     const { frontLeft, frontRight, rearLeft, rearRight } = wheelRefs.current
 
     // Front wheels: rolling + steering
     if (frontLeft) {
-      frontLeft.rotation.y += wheelRotationSpeed
-      frontLeft.rotation.z = steeringAngle
+      frontLeft.rotation.z += wheelRotationSpeed // Corrected rolling axis to X
+      frontLeft.rotation.y = steeringAngle       // Assuming Z or Y is for steering
     }
     if (frontRight) {
-      frontRight.rotation.y += wheelRotationSpeed
-      frontRight.rotation.z = steeringAngle
+      frontRight.rotation.z += wheelRotationSpeed // Corrected rolling axis to X
+      frontRight.rotation.y = steeringAngle
     }
 
-    // Rear wheels: rolling only
+    // Rear wheels: rolling only (already correct in your original code)
     if (rearLeft) {
-      rearLeft.rotation.y += wheelRotationSpeed
+      rearLeft.rotation.z += wheelRotationSpeed
     }
     if (rearRight) {
-      rearRight.rotation.y += wheelRotationSpeed
+      rearRight.rotation.z += wheelRotationSpeed
     }
 
     // Update wheel rotation in store for reference
     if (carSpeed !== 0) {
       updateWheelRotation(delta)
     }
+
 
     // Animate glass shards falling
     Object.values(glassShardsRef.current).forEach((shardGroup) => {

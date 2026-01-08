@@ -112,7 +112,7 @@ export function GameScene() {
       <Ground size={100} roadWidth={12} />
 
       {/* Driver door trigger zone (debug - set visible={true} to see it) */}
-      <DriverDoorTrigger visible={false} />
+      <DriverDoorTrigger visible={true} />
 
       {/* All three agents */}
       {agentChecked && !agentModelExists && (

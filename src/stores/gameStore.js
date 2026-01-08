@@ -35,7 +35,7 @@ export const useGameStore = create((set, get) => ({
       isGunDrawn: false,
     },
     [AGENT_IDS.THIRD_AGENT]: {
-      position: [-8, 0, 6],
+      position: [-1, 0, 9],
       rotation: [0, -Math.PI / 4, 0],
       animation: 'walk',
       isGunDrawn: false,
@@ -55,7 +55,7 @@ export const useGameStore = create((set, get) => ({
   brokenGlassPanels: [],
 
   // Driver door trigger position (near front left wheel)
-  driverDoorPosition: [-1.5, 0, 1.5],
+  driverDoorPosition: [-1.5, 0, 0],
   driverDoorRadius: 1.2,
 
   // Transition state

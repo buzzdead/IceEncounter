@@ -21,7 +21,7 @@ const CAR_REVERSE_SEQUENCE = {
 // Third agent walking parameters
 const THIRD_AGENT_WALK = {
   // Target position (front of car)
-  targetPosition: [0, 0, 4],
+  targetPosition: [8, 0, -5],
   walkSpeed: 2,
 }
 
