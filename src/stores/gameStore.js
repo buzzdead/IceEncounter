@@ -60,7 +60,7 @@ export const useGameStore = create((set, get) => ({
   driverDoorRadius: 1.2,
 
   // Front of car trigger (for third agent phase)
-  frontTriggerOffset: 4, // Distance in front of car center
+  frontTriggerOffset: 8, // Distance in front of car center
   frontTriggerRadius: 1.5,
 
   // Transition state
@@ -157,8 +157,8 @@ export const useGameStore = create((set, get) => ({
     // Calculate front trigger position based on car position and rotation
     // Car faces -Z when rotation is 0, so front is in -Z direction
     const carRot = carRotation[1]
-    const frontX = carPosition[0] + Math.sin(carRot) * frontTriggerOffset
-    const frontZ = carPosition[2] - Math.cos(carRot) * frontTriggerOffset
+const frontX = carPosition[0] - Math.sin(carRot) * frontTriggerOffset
+const frontZ = carPosition[2] - Math.cos(carRot) * frontTriggerOffset
 
     const dx = thirdAgentPos[0] - frontX
     const dz = thirdAgentPos[2] - frontZ

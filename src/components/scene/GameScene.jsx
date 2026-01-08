@@ -114,8 +114,8 @@ function FrontTrigger({ visible = false }) {
 
   // Calculate trigger position based on car position and rotation
   const carRot = carRotation[1]
-  const frontX = carPosition[0] + Math.sin(carRot) * frontTriggerOffset
-  const frontZ = carPosition[2] - Math.cos(carRot) * frontTriggerOffset
+const frontX = carPosition[0] - Math.sin(carRot) * frontTriggerOffset
+const frontZ = carPosition[2] - Math.cos(carRot) * frontTriggerOffset
 
   return (
     <mesh position={[frontX, 0.02, frontZ]} rotation={[-Math.PI / 2, 0, 0]}>
