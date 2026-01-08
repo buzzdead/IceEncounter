@@ -6,6 +6,7 @@ export const GAME_PHASES = {
   CAR_REVERSING: 'car_reversing',     // Car turns wheels and reverses
   TRANSITION: 'transition',            // VFX transition between agents
   THIRD_AGENT: 'third_agent',         // Control switches to third agent
+  CAR_CHARGE: 'car_charge',           // Car charges towards agent then veers right
 }
 
 // Agent IDs
@@ -57,6 +58,10 @@ export const useGameStore = create((set, get) => ({
   // Driver door trigger position (near front left wheel)
   driverDoorPosition: [-1.5, 0, 0],
   driverDoorRadius: 1.2,
+
+  // Front of car trigger (for third agent phase)
+  frontTriggerOffset: 4, // Distance in front of car center
+  frontTriggerRadius: 1.5,
 
   // Transition state
   transitionProgress: 0,
@@ -140,6 +145,31 @@ export const useGameStore = create((set, get) => ({
   // Trigger car reverse sequence
   triggerCarReverse: () => {
     set({ gamePhase: GAME_PHASES.CAR_REVERSING })
+  },
+
+  // Check if third agent reached front of car trigger
+  checkFrontTrigger: () => {
+    const { agents, carPosition, carRotation, frontTriggerOffset, frontTriggerRadius, gamePhase } = get()
+    if (gamePhase !== GAME_PHASES.THIRD_AGENT) return false
+
+    const thirdAgentPos = agents[AGENT_IDS.THIRD_AGENT].position
+
+    // Calculate front trigger position based on car position and rotation
+    // Car faces -Z when rotation is 0, so front is in -Z direction
+    const carRot = carRotation[1]
+    const frontX = carPosition[0] + Math.sin(carRot) * frontTriggerOffset
+    const frontZ = carPosition[2] - Math.cos(carRot) * frontTriggerOffset
+
+    const dx = thirdAgentPos[0] - frontX
+    const dz = thirdAgentPos[2] - frontZ
+    const distance = Math.sqrt(dx * dx + dz * dz)
+
+    return distance < frontTriggerRadius
+  },
+
+  // Trigger car charge sequence
+  triggerCarCharge: () => {
+    set({ gamePhase: GAME_PHASES.CAR_CHARGE })
   },
 
   // Start transition effect
