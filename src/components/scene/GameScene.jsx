@@ -4,7 +4,7 @@ import { Agent } from '../models/Agent'
 import { Car } from '../models/Car'
 import { PlaceholderAgent } from '../models/PlaceholderAgent'
 import { PlaceholderCar } from '../models/PlaceholderCar'
-import { PlaceholderBullets } from '../models/PlaceholderBullet'
+import { Bullets } from '../models/Bullet'
 import { Ground } from '../environment/Ground'
 import { GameController } from './GameController'
 import { TransitionEffect } from './TransitionEffect'
@@ -148,7 +148,7 @@ export function GameScene() {
       {!carChecked && <Loader />}
 
       {/* Bullets */}
-      <PlaceholderBullets />
+      <Bullets />
 
       {/* Transition effects */}
       <TransitionEffect />
