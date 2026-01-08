@@ -102,27 +102,28 @@ export function Car({ modelPath = '/models/car.glb', ...props }) {
     }
 
     // Rotate all wheels based on speed (rolling)
-    const wheelRotationSpeed = carSpeed * delta * 10
+    // Using Y axis for rolling (common in Blender exports)
+    const wheelRotationSpeed = carSpeed * delta * 5
 
     // Apply rolling rotation and steering to wheels
     const { frontLeft, frontRight, rearLeft, rearRight } = wheelRefs.current
 
     // Front wheels: rolling + steering
     if (frontLeft) {
-      frontLeft.rotation.x += wheelRotationSpeed
-      frontLeft.rotation.y = steeringAngle
+      frontLeft.rotation.y += wheelRotationSpeed
+      frontLeft.rotation.z = steeringAngle
     }
     if (frontRight) {
-      frontRight.rotation.x += wheelRotationSpeed
-      frontRight.rotation.y = steeringAngle
+      frontRight.rotation.y += wheelRotationSpeed
+      frontRight.rotation.z = steeringAngle
     }
 
     // Rear wheels: rolling only
     if (rearLeft) {
-      rearLeft.rotation.x += wheelRotationSpeed
+      rearLeft.rotation.y += wheelRotationSpeed
     }
     if (rearRight) {
-      rearRight.rotation.x += wheelRotationSpeed
+      rearRight.rotation.y += wheelRotationSpeed
     }
 
     // Update wheel rotation in store for reference
