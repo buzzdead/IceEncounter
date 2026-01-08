@@ -57,7 +57,7 @@ function GameUI() {
 
 function App() {
   return (
-    <div className="game-container">
+    <div className="game-container" onContextMenu={(e) => e.preventDefault()}>
       <Canvas
         shadows
         camera={{
