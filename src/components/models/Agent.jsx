@@ -2,7 +2,8 @@ import { useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGLTF, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
-import { useGameStore, AGENT_IDS } from '../../stores/gameStore'
+import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js'
+import { useGameStore } from '../../stores/gameStore'
 
 // Animation name mappings - update these to match your actual animation names in Blender
 const ANIMATION_MAP = {
@@ -15,7 +16,6 @@ const ANIMATION_MAP = {
 export function Agent({ agentId, modelPath = '/models/agent.glb', ...props }) {
   const group = useRef()
   const { scene, animations } = useGLTF(modelPath)
-  const { actions, mixer } = useAnimations(animations, group)
 
   const agents = useGameStore((state) => state.agents)
   const activeAgentId = useGameStore((state) => state.activeAgentId)
@@ -24,9 +24,10 @@ export function Agent({ agentId, modelPath = '/models/agent.glb', ...props }) {
   const agent = agents[agentId]
   const isActive = agentId === activeAgentId
 
-  // Clone scene to avoid sharing issues between multiple agents
+  // Use SkeletonUtils.clone for proper skinned mesh cloning
+  // Include agentId in deps so each agent gets unique clone
   const clonedScene = useMemo(() => {
-    const clone = scene.clone()
+    const clone = skeletonClone(scene)
     // Deep clone materials to avoid sharing
     clone.traverse((child) => {
       if (child.isMesh && child.material) {
@@ -34,11 +35,14 @@ export function Agent({ agentId, modelPath = '/models/agent.glb', ...props }) {
       }
     })
     return clone
-  }, [scene])
+  }, [scene, agentId])
+
+  // Get animations for this specific clone
+  const { actions, mixer } = useAnimations(animations, group)
 
   // Handle animation changes
   useEffect(() => {
-    if (!agent) return
+    if (!agent || !actions) return
 
     const animationName = ANIMATION_MAP[agent.animation]
     const action = actions[animationName]
