@@ -28,10 +28,10 @@ export const AGENT_ANIMATIONS = {
  */
 export const CAR_COMPONENTS = {
   wheels: {
-    frontLeft: 'Wheel_FL',
-    frontRight: 'Wheel_FR',
-    rearLeft: 'Wheel_RL',
-    rearRight: 'Wheel_RR',
+    frontLeft: 'FrontWheelL',
+    frontRight: 'FrontWheelR',
+    rearLeft: 'RearWheelL',
+    rearRight: 'RearWheelR',
   },
   glass: {
     windshield: 'Glass_Windshield',

@@ -4,12 +4,12 @@ import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { useGameStore } from '../../stores/gameStore'
 
-// Wheel names - update these to match your Blender model's wheel object names
+// Wheel names - matching Blender model's wheel object names
 const WHEEL_NAMES = {
-  frontLeft: 'Wheel_FL',   // Front Left wheel
-  frontRight: 'Wheel_FR',  // Front Right wheel
-  rearLeft: 'Wheel_RL',    // Rear Left wheel
-  rearRight: 'Wheel_RR',   // Rear Right wheel
+  frontLeft: 'FrontWheelL',
+  frontRight: 'FrontWheelR',
+  rearLeft: 'RearWheelL',
+  rearRight: 'RearWheelR',
 }
 
 // Glass panel names - update to match your Blender model
