@@ -27,17 +27,20 @@ const THIRD_AGENT_WALK = {
 
 // Car charge sequence parameters
 const CAR_CHARGE_SEQUENCE = {
-  // Phase 1: Accelerate towards agent
-  approachDuration: 1.5,
-  approachSpeed: 8,
+  // Phase 1: Straighten wheels
+  straightenDuration: 1.0,
 
-  // Phase 2: Turn right and graze past
+  // Phase 2: Move slowly forward
+  approachDuration: 3.0,
+  approachSpeed: 2,
+
+  // Phase 3: Turn right and graze past
   turnDuration: 2.0,
-  turnSpeed: 6,
-  turnRate: -1.2, // Negative = turn right
+  turnSpeed: 4,
+  turnRate: -0.8, // Negative = turn right
 
   // Total duration
-  totalDuration: 3.5,
+  totalDuration: 6.0,
 }
 
 export function GameController() {
@@ -142,16 +145,27 @@ export function GameController() {
       const forward = new THREE.Vector3(0, 0, -1)
       forward.applyEuler(new THREE.Euler(0, currentRot, 0))
 
-      // Phase 1: Drive towards agent (first 1.5 seconds)
-      if (t < seq.approachDuration) {
+      // Phase 1: Straighten wheels (0 to 1s)
+      if (t < seq.straightenDuration) {
+        const progress = t / seq.straightenDuration
+        // Ease out - animate steering back to 0
+        const currentSteering = state.steeringAngle
+        const targetSteering = 0
+        const newSteering = currentSteering * (1 - progress)
+        setSteeringAngle(newSteering)
+        setCarSpeed(0)
+      }
+      // Phase 2: Move slowly forward (1s to 4s)
+      else if (t < seq.straightenDuration + seq.approachDuration) {
         const newPos = [...state.carPosition]
         newPos[0] += forward.x * seq.approachSpeed * delta
         newPos[2] += forward.z * seq.approachSpeed * delta
 
         setCarPosition(newPos)
+        setSteeringAngle(0)
         setCarSpeed(seq.approachSpeed)
       }
-      // Phase 2: Turn right and continue driving (1.5s to 3.5s)
+      // Phase 3: Turn right and continue driving (4s to 6s)
       else if (t < seq.totalDuration) {
         const newPos = [...state.carPosition]
         newPos[0] += forward.x * seq.turnSpeed * delta
@@ -169,7 +183,6 @@ export function GameController() {
       else {
         setCarSpeed(0)
         setSteeringAngle(0)
-        // Could trigger next phase here if needed
       }
     }
 
